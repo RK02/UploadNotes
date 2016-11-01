@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 
@@ -76,37 +77,12 @@ public class MainUI {
 			layoutParams.addRule(right_of, 0);
 			view.setLayoutParams(layoutParams);
 			view.setRotation(ui_rotation);
-	
-			view = main_activity.findViewById(R.id.take_photo);
-			layoutParams = (RelativeLayout.LayoutParams)view.getLayoutParams();
-			layoutParams.addRule(align_parent_left, 0);
-			layoutParams.addRule(align_parent_right, RelativeLayout.TRUE);
-			view.setLayoutParams(layoutParams);
-			view.setRotation(ui_rotation);
 		}
 
-		setTakePhotoIcon();
 		// no need to call setSwitchCameraContentDescription()
 
     }
 
-    /** Set icon for taking photos vs videos.
-	 *  Also handles content descriptions for the take photo button and switch video button.
-     */
-    public void setTakePhotoIcon() {
-		if( main_activity.getPreview() != null ) {
-			ImageButton view = (ImageButton)main_activity.findViewById(R.id.take_photo);
-			int resource = 0;
-			int content_description = 0;
-
-				resource = R.drawable.take_photo_selector;
-				content_description = R.string.take_photo;
-
-			view.setImageResource(resource);
-			view.setContentDescription( main_activity.getResources().getString(content_description) );
-			view.setTag(resource); // for testing
-		}
-    }
 
     public boolean getUIPlacementRight() {
     	return this.ui_placement_right;
@@ -150,7 +126,7 @@ public class MainUI {
 
         		String pref_immersive_mode = sharedPreferences.getString(PreferenceKeys.getImmersiveModePreferenceKey(), "immersive_mode_low_profile");
         		if( pref_immersive_mode.equals("immersive_mode_everything") ) {
-    			    View takePhotoButton = (View) main_activity.findViewById(R.id.take_photo);
+    			    View takePhotoButton = (View) main_activity.findViewById(R.id.b_capture);
     			    takePhotoButton.setVisibility(visibility);
         		}
 				if( !immersive_mode ) {

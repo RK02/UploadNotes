@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -617,7 +618,7 @@ public class MyApplicationInterface implements ApplicationInterface {
         
 		boolean do_in_background = saveInBackground(image_capture_intent);
 
-		boolean success = imageSaver.saveImageJpeg(do_in_background, is_hdr, save_expo, images,
+		final boolean success = imageSaver.saveImageJpeg(do_in_background, is_hdr, save_expo, images,
 				image_capture_intent, image_capture_intent_uri,
 				using_camera2, 90,
 				do_auto_stabilise, level_angle,
@@ -626,8 +627,9 @@ public class MyApplicationInterface implements ApplicationInterface {
 				preference_stamp, preference_textstamp, font_size, color, pref_style, preference_stamp_dateformat, preference_stamp_timeformat, preference_stamp_gpsformat,
 				store_location, location, store_geo_direction, geo_direction,
 				has_thumbnail_animation);
-		
+
 		return success;
+
 	}
 
     @Override
@@ -658,28 +660,6 @@ public class MyApplicationInterface implements ApplicationInterface {
 		last_images.clear();
 	}
 
-	void shareLastImage() {
-		Preview preview  = main_activity.getPreview();
-		if( preview.isPreviewPaused() ) {
-			LastImage share_image = null;
-			for(int i=0;i<last_images.size() && share_image == null;i++) {
-				LastImage last_image = last_images.get(i);
-				if( last_image.share ) {
-					share_image = last_image;
-				}
-			}
-			if( share_image != null ) {
-				Uri last_image_uri = share_image.uri;
-				Intent intent = new Intent(Intent.ACTION_SEND);
-				intent.setType("image/jpeg");
-				intent.putExtra(Intent.EXTRA_STREAM, last_image_uri);
-				main_activity.startActivity(Intent.createChooser(intent, "Photo"));
-			}
-			clearLastImages();
-			preview.startCameraPreview();
-		}
-	}
-	
 	@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 	private void trashImage(boolean image_saf, Uri image_uri, String image_name) {
 		Preview preview  = main_activity.getPreview();

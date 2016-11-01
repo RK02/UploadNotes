@@ -56,7 +56,7 @@ public class AndroidCamera extends Activity implements SurfaceHolder.Callback{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         
         getWindow().setFormat(PixelFormat.UNKNOWN);
         cameraSurfaceView = (CameraSurfaceView)findViewById(R.id.camerapreview);

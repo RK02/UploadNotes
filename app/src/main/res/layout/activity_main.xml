@@ -1,160 +1,216 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#000000"
     tools:context=".MainActivity">
 
     <FrameLayout
         android:id="@+id/preview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        />
-    
-    <ImageButton
-        android:id="@+id/take_photo"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        android:contentDescription="@string/take_photo"
-        android:src="@drawable/take_photo_selector"
-        android:onClick="clickedTakePhoto"
-        android:layout_centerVertical="true"
-		android:background="@null"
-        />
-    
+        android:layout_centerInParent="true" />
+
     <ImageButton
         android:id="@+id/exposure_lock"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
         android:contentDescription="@string/exposure_lock"
         android:onClick="clickedExposureLock"
-        android:visibility="gone"
-        />
+        android:padding="10dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
 
     <FrameLayout
         android:id="@+id/prefs_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true"
-        />
-    
-    <FrameLayout
-        android:id="@+id/locker"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
-    
+        android:layout_centerInParent="true" />
+
+
     <ScrollView
         android:id="@+id/hide_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
+        android:layout_height="match_parent" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:background="@android:color/transparent"
-        android:clickable="true"
-        android:src="@mipmap/ic_launcher_take_photo"
-        app:fabSize="mini"
-        app:layout_anchor="@id/locker"
-        app:layout_anchorGravity="bottom|right|end"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="8dp"
+            android:text="Keep the page in this box"
+            android:textColor="#FFFFFF" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:background="@drawable/viewfinder_border">
+
+            <View
+                android:id="@+id/transparent_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#58d9d9d9"
+                android:visibility="gone"/>
+            <ImageView
+                android:id="@+id/iv_done"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:paddingBottom="40dp"
+                android:background="@android:color/transparent"
+                android:src="@mipmap/walkthrough_3"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/b_capture"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="40dp"
+                android:background="@drawable/transition_capture_bk"
+                style="?android:attr/borderlessButtonStyle"
+                android:onClick="clickedTakePhoto"/>
+
+        </RelativeLayout>
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/transparent_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#F7971D"
         android:alpha="0.75"
+        android:background="#F7971D"
         android:orientation="vertical"
+        android:visibility="gone"
         android:weightSum="2">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tv_takePhoto"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Take Photo"
                 android:gravity="center"
+                android:text="Take Photo"
                 android:textColor="#FFFFFF"
                 android:textSize="25sp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tv_new_user"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="New user?"
                 android:gravity="center"
+                android:text="New user?"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
+
             <Button
                 android:id="@+id/b_signUp"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
-                android:text="Signup on Campus Connect"
+                android:layout_marginTop="8dp"
                 android:background="#FFFFFF"
-                android:textColor="#000000"
-                android:layout_marginTop="8dp"/>
+                android:text="Signup on Campus Connect"
+                android:textColor="#000000" />
 
         </LinearLayout>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="2dp"
-            android:background="#FFFFFF"/>
+            android:background="#FFFFFF" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/tv_fromGallery"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:text="Choose from Gallery"
                 android:gravity="center"
+                android:text="Choose from Gallery"
                 android:textColor="#FFFFFF"
                 android:textSize="25sp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tv_welcome_back"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Welcome Back!"
                 android:gravity="center"
+                android:text="Welcome Back!"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
+
             <Button
                 android:id="@+id/b_signIn"
                 android:layout_width="250dp"
                 android:layout_height="wrap_content"
-                android:text="Sign In with Google"
+                android:layout_marginTop="8dp"
                 android:background="#FFFFFF"
-                android:textColor="#000000"
-                android:layout_marginTop="8dp"/>
+                android:text="Sign In with Google"
+                android:textColor="#000000" />
 
         </LinearLayout>
 
     </LinearLayout>
 
+    <RelativeLayout
+        android:id="@+id/viewfinder_info_container"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:visibility="gone"
+        android:layout_alignParentBottom="true">
 
-    
+        <TextView
+            android:id="@+id/tv_imageNumber"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#92f7971d"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:gravity="center_vertical"
+            android:text="1 page"/>
+
+    </RelativeLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/fab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:visibility="gone"
+        android:src="@mipmap/ic_done_white_24dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="18dp"
+        android:layout_marginRight="16dp"
+        app:fabSize="mini"
+        app:backgroundTint="@color/ColorPrimary"/>
+
 </RelativeLayout>

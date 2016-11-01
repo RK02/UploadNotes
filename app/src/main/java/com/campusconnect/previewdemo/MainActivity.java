@@ -15,8 +15,6 @@ import java.util.Map;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.PorterDuff;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -65,7 +63,9 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.w3c.dom.Text;
@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity{
 	private SparseIntArray sound_ids = null;
 
     private ToastBoxer screen_locked_toast = new ToastBoxer();
-    private ToastBoxer changed_auto_stabilise_toast = new ToastBoxer();
 	private ToastBoxer exposure_lock_toast = new ToastBoxer();
 	private boolean block_startup_toast = false; // used when returning from Settings/Popup - if we're displaying a toast anyway, don't want to display the info toast too
 
@@ -105,11 +104,18 @@ public class MainActivity extends AppCompatActivity{
 	public float test_angle = 0.0f;
 	public String test_last_saved_image = null;
 
+	int numberOfImages=0;
+
 	TextView newUser, welcomeBack, takePhoto, fromGallery;
 	Button signUp, signIn;
+	public static Button capturePhoto;
+	public static RelativeLayout infoContainer;
 	LinearLayout transparentOverlayView;
-	FloatingActionButton done;
-	
+	public static FloatingActionButton done;
+	public static TextView imageNumber;
+	public static View transparencyOnCapture;
+	public static ImageView doneSign;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		long debug_time = 0;
@@ -120,10 +126,15 @@ public class MainActivity extends AppCompatActivity{
 		welcomeBack = (TextView)findViewById(R.id.tv_welcome_back);
 		takePhoto = (TextView)findViewById(R.id.tv_takePhoto);
 		fromGallery = (TextView)findViewById(R.id.tv_fromGallery);
+		imageNumber = (TextView)findViewById(R.id.tv_imageNumber);
 		signIn = (Button)findViewById(R.id.b_signIn);
 		signUp = (Button)findViewById(R.id.b_signUp);
+		capturePhoto = (Button)findViewById(R.id.b_capture);
+		infoContainer = (RelativeLayout) findViewById(R.id.viewfinder_info_container);
 		transparentOverlayView = (LinearLayout)findViewById(R.id.transparent_overlay);
 		done = (FloatingActionButton)findViewById(R.id.fab);
+		transparencyOnCapture = (View)findViewById(R.id.transparent_view);
+		doneSign = (ImageView)findViewById(R.id.iv_done);
 
 		signIn.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -564,7 +575,7 @@ public class MainActivity extends AppCompatActivity{
 		SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
 		// force to landscape mode
-		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+//		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 		// keep screen active - see http://stackoverflow.com/questions/2131948/force-screen-on
 		if( sharedPreferences.getBoolean(PreferenceKeys.getKeepDisplayOnPreferenceKey(), true) ) {
 			getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -677,7 +688,8 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void takePicture() {
-    	this.preview.takePicturePressed();
+		numberOfImages++;
+    	this.preview.takePicturePressed(numberOfImages);
     }
 
 	@Override
@@ -699,7 +711,6 @@ public class MainActivity extends AppCompatActivity{
 			exposureLockButton.setImageResource(preview.isExposureLocked() ? R.mipmap.exposure_locked : R.mipmap.exposure_unlocked);
 	    }
 
-		mainUI.setTakePhotoIcon();
 
 		if( !block_startup_toast ) {
 			this.showPhotoVideoToast(false);

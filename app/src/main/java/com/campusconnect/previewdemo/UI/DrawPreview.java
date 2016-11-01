@@ -28,6 +28,7 @@ import android.util.Log;
 import android.util.Pair;
 import android.view.Surface;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 
 public class DrawPreview {
@@ -431,105 +432,8 @@ public class DrawPreview {
 		canvas.save();
 		canvas.rotate(ui_rotation, canvas.getWidth()/2.0f, canvas.getHeight()/2.0f);
 
-		int text_y = (int) (20 * scale + 0.5f); // convert dps to pixels
-		// fine tuning to adjust placement of text with respect to the GUI, depending on orientation
-		int text_base_y = 0;
-		if( ui_rotation == ( ui_placement_right ? 0 : 180 ) ) {
-			text_base_y = canvas.getHeight() - (int)(0.5*text_y);
-		}
-		else if( ui_rotation == ( ui_placement_right ? 180 : 0 ) ) {
-			text_base_y = canvas.getHeight() - (int)(2.5*text_y); // leave room for GUI icons
-		}
-		else if( ui_rotation == 90 || ui_rotation == 270 ) {
-			//text_base_y = canvas.getHeight() + (int)(0.5*text_y);
-			ImageButton view = (ImageButton)main_activity.findViewById(R.id.take_photo);
-			// align with "top" of the take_photo button, but remember to take the rotation into account!
-			view.getLocationOnScreen(gui_location);
-			int view_left = gui_location[0];
-			preview.getView().getLocationOnScreen(gui_location);
-			int this_left = gui_location[0];
-			int diff_x = view_left - ( this_left + canvas.getWidth()/2 );
-    		/*if( MyDebug.LOG ) {
-    			Log.d(TAG, "view left: " + view_left);
-    			Log.d(TAG, "this left: " + this_left);
-    			Log.d(TAG, "canvas is " + canvas.getWidth() + " x " + canvas.getHeight());
-    		}*/
-			int max_x = canvas.getWidth();
-			if( ui_rotation == 90 ) {
-				// so we don't interfere with the top bar info (datetime, free memory, ISO)
-				max_x -= (int)(2.5*text_y);
-			}
-			if( canvas.getWidth()/2 + diff_x > max_x ) {
-				// in case goes off the size of the canvas, for "black bar" cases (when preview aspect ratio != screen aspect ratio)
-				diff_x = max_x - canvas.getWidth()/2;
-			}
-			text_base_y = canvas.getHeight()/2 + diff_x - (int)(0.5*text_y);
-		}
-		final int top_y = (int) (5 * scale + 0.5f); // convert dps to pixels
-		final int location_size = (int) (20 * scale + 0.5f); // convert dps to pixels
 
-		final String ybounds_text = getContext().getResources().getString(R.string.zoom) + getContext().getResources().getString(R.string.angle) + getContext().getResources().getString(R.string.direction);
-		final double close_angle = 1.0f;
-		if( camera_controller != null && !preview.isPreviewPaused() ) {
-			/*canvas.drawText("PREVIEW", canvas.getWidth() / 2,
-					canvas.getHeight() / 2, p);*/
-			boolean draw_angle = has_level_angle && sharedPreferences.getBoolean(PreferenceKeys.getShowAnglePreferenceKey(), true);
-			boolean draw_geo_direction = has_geo_direction && sharedPreferences.getBoolean(PreferenceKeys.getShowGeoDirectionPreferenceKey(), true);
-			if( draw_angle ) {
-				int color = Color.WHITE;
-				p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-				int pixels_offset_x = 0;
-				if( draw_geo_direction ) {
-					pixels_offset_x = - (int) (82 * scale + 0.5f); // convert dps to pixels
-					p.setTextAlign(Paint.Align.LEFT);
-				}
-				else {
-					p.setTextAlign(Paint.Align.CENTER);
-				}
-				if( Math.abs(level_angle) <= close_angle ) {
-					color = getAngleHighlightColor();
-					p.setUnderlineText(true);
-				}
-				String number_string = decimalFormat.format(level_angle);
-				number_string = number_string.replaceAll( "^-(?=0(.0*)?$)", ""); // avoids displaying "-0.0", see http://stackoverflow.com/questions/11929096/negative-sign-in-case-of-zero-in-java
-				String string = getContext().getResources().getString(R.string.angle) + ": " + number_string + (char)0x00B0;
-				applicationInterface.drawTextWithBackground(canvas, p, string, color, Color.BLACK, canvas.getWidth() / 2 + pixels_offset_x, text_base_y, false, ybounds_text, true);
-				p.setUnderlineText(false);
-			}
-			if( draw_geo_direction ) {
-				int color = Color.WHITE;
-				p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-				if( draw_angle ) {
-					p.setTextAlign(Paint.Align.LEFT);
-				}
-				else {
-					p.setTextAlign(Paint.Align.CENTER);
-				}
-				float geo_angle = (float)Math.toDegrees(geo_direction);
-				if( geo_angle < 0.0f ) {
-					geo_angle += 360.0f;
-				}
-				String string = " " + getContext().getResources().getString(R.string.direction) + ": " + Math.round(geo_angle) + (char)0x00B0;
-				applicationInterface.drawTextWithBackground(canvas, p, string, color, Color.BLACK, canvas.getWidth() / 2, text_base_y, false, ybounds_text, true);
-			}
-			if( preview.isOnTimer() ) {
-				long remaining_time = (preview.getTimerEndTime() - System.currentTimeMillis() + 999)/1000;
-				if( remaining_time > 0 ) {
-					p.setTextSize(42 * scale + 0.5f); // convert dps to pixels
-					p.setTextAlign(Paint.Align.CENTER);
-	            	String time_s = "";
-	            	if( remaining_time < 60 ) {
-	            		// simpler to just show seconds when less than a minute
-	            		time_s = "" + remaining_time;
-	            	}
-	            	else {
-		            	time_s = getTimeStringFromSeconds(remaining_time);
-	            	}
-	            	applicationInterface.drawTextWithBackground(canvas, p, time_s, Color.rgb(244, 67, 54), Color.BLACK, canvas.getWidth() / 2, canvas.getHeight() / 2); // Red 500
-				}
-			}
-		}
-		else if( camera_controller == null ) {
+		if( camera_controller == null ) {
 			/*if( MyDebug.LOG ) {
 				Log.d(TAG, "no camera!");
 				Log.d(TAG, "width " + canvas.getWidth() + " height " + canvas.getHeight());
@@ -544,188 +448,6 @@ public class DrawPreview {
 			//canvas.drawRect(0.0f, 0.0f, 100.0f, 100.0f, p);
 			//canvas.drawRGB(255, 0, 0);
 			//canvas.drawRect(0.0f, 0.0f, canvas.getWidth(), canvas.getHeight(), p);
-		}
-		if( camera_controller != null && sharedPreferences.getBoolean(PreferenceKeys.getShowISOPreferenceKey(), true) ) {
-			p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-			p.setTextAlign(Paint.Align.LEFT);
-			int location_x = (int) (50 * scale + 0.5f); // convert dps to pixels
-			int location_y = top_y + (int) (32 * scale + 0.5f); // convert dps to pixels
-			//int location_y2 = top_y + (int) (48 * scale + 0.5f); // convert dps to pixels
-			if( ui_rotation == 90 || ui_rotation == 270 ) {
-				int diff = canvas.getWidth() - canvas.getHeight();
-				location_x += diff/2;
-				location_y -= diff/2;
-				//location_y2 -= diff/2;
-			}
-			if( ui_rotation == 90 ) {
-				location_y = canvas.getHeight() - location_y - location_size;
-				//location_y2 = canvas.getHeight() - location_y2 - location_size;
-			}
-			if( ui_rotation == 180 ) {
-				location_x = canvas.getWidth() - location_x;
-				p.setTextAlign(Paint.Align.RIGHT);
-			}
-			String string = "";
-			if( camera_controller.captureResultHasIso() ) {
-				int iso = camera_controller.captureResultIso();
-				if( string.length() > 0 )
-					string += " ";
-				string += preview.getISOString(iso);
-			}
-			if( camera_controller.captureResultHasExposureTime() ) {
-				long exposure_time = camera_controller.captureResultExposureTime();
-				if( string.length() > 0 )
-					string += " ";
-				string += preview.getExposureTimeString(exposure_time);
-			}
-			/*if( camera_controller.captureResultHasFrameDuration() ) {
-				long frame_duration = camera_controller.captureResultFrameDuration();
-				if( string.length() > 0 )
-					string += " ";
-				string += preview.getFrameDurationString(frame_duration);
-			}*/
-			if( string.length() > 0 ) {
-				applicationInterface.drawTextWithBackground(canvas, p, string, Color.rgb(255, 235, 59), Color.BLACK, location_x, location_y, true, ybounds_text, true); // Yellow 500
-			}
-			/*if( camera_controller.captureResultHasFocusDistance() ) {
-				float dist_min = camera_controller.captureResultFocusDistanceMin();
-				float dist_max = camera_controller.captureResultFocusDistanceMin();
-				string = preview.getFocusDistanceString(dist_min, dist_max);
-				applicationInterface.drawTextWithBackground(canvas, p, string, Color.rgb(255, 235, 59), Color.BLACK, location_x, location_y2, true, ybounds_text, true); // Yellow 500
-			}*/
-		}
-		if( preview.supportsZoom() && camera_controller != null && sharedPreferences.getBoolean(PreferenceKeys.getShowZoomPreferenceKey(), true) ) {
-			float zoom_ratio = preview.getZoomRatio();
-			// only show when actually zoomed in
-			if( zoom_ratio > 1.0f + 1.0e-5f ) {
-				// Convert the dps to pixels, based on density scale
-				int pixels_offset_y = text_y;
-				p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-				p.setTextAlign(Paint.Align.CENTER);
-				applicationInterface.drawTextWithBackground(canvas, p, getContext().getResources().getString(R.string.zoom) + ": " + zoom_ratio +"x", Color.WHITE, Color.BLACK, canvas.getWidth() / 2, text_base_y - pixels_offset_y, false, ybounds_text, true);
-			}
-		}
-
-		if( sharedPreferences.getBoolean(PreferenceKeys.getShowBatteryPreferenceKey(), true) ) {
-			if( !this.has_battery_frac || System.currentTimeMillis() > this.last_battery_time + 60000 ) {
-				// only check periodically - unclear if checking is costly in any way
-				Intent batteryStatus = main_activity.registerReceiver(null, battery_ifilter);
-				int battery_level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-				int battery_scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-				has_battery_frac = true;
-				battery_frac = battery_level/(float)battery_scale;
-				last_battery_time = System.currentTimeMillis();
-			}
-			//battery_frac = 0.2999f; // test
-			int battery_x = (int) (5 * scale + 0.5f); // convert dps to pixels
-			int battery_y = top_y;
-			int battery_width = (int) (5 * scale + 0.5f); // convert dps to pixels
-			int battery_height = 4*battery_width;
-			if( ui_rotation == 90 || ui_rotation == 270 ) {
-				int diff = canvas.getWidth() - canvas.getHeight();
-				battery_x += diff/2;
-				battery_y -= diff/2;
-			}
-			if( ui_rotation == 90 ) {
-				battery_y = canvas.getHeight() - battery_y - battery_height;
-			}
-			if( ui_rotation == 180 ) {
-				battery_x = canvas.getWidth() - battery_x - battery_width;
-			}
-			p.setColor(Color.WHITE);
-			p.setStyle(Paint.Style.STROKE);
-			canvas.drawRect(battery_x, battery_y, battery_x+battery_width, battery_y+battery_height, p);
-			p.setColor(battery_frac >= 0.3f ? Color.rgb(37, 155, 36) : Color.rgb(244, 67, 54)); // Green 500 or Red 500
-			p.setStyle(Paint.Style.FILL);
-			canvas.drawRect(battery_x+1, battery_y+1+(1.0f-battery_frac)*(battery_height-2), battery_x+battery_width-1, battery_y+battery_height-1, p);
-		}
-		
-		boolean store_location = sharedPreferences.getBoolean(PreferenceKeys.getLocationPreferenceKey(), false);
-		if( store_location ) {
-			int location_x = (int) (20 * scale + 0.5f); // convert dps to pixels
-			int location_y = top_y;
-			if( ui_rotation == 90 || ui_rotation == 270 ) {
-				int diff = canvas.getWidth() - canvas.getHeight();
-				location_x += diff/2;
-				location_y -= diff/2;
-			}
-			if( ui_rotation == 90 ) {
-				location_y = canvas.getHeight() - location_y - location_size;
-			}
-			if( ui_rotation == 180 ) {
-				location_x = canvas.getWidth() - location_x - location_size;
-			}
-			location_dest.set(location_x, location_y, location_x + location_size, location_y + location_size);
-			if( applicationInterface.getLocation() != null ) {
-				canvas.drawBitmap(location_bitmap, null, location_dest, p);
-				int location_radius = location_size/10;
-				int indicator_x = location_x + location_size;
-				int indicator_y = location_y + location_radius/2 + 1;
-				p.setStyle(Paint.Style.FILL);
-				p.setColor(applicationInterface.getLocation().getAccuracy() < 25.01f ? Color.rgb(37, 155, 36) : Color.rgb(255, 235, 59)); // Green 500 or Yellow 500
-				canvas.drawCircle(indicator_x, indicator_y, location_radius, p);
-			}
-			else {
-				canvas.drawBitmap(location_off_bitmap, null, location_dest, p);
-			}
-		}
-		
-		if( sharedPreferences.getBoolean(PreferenceKeys.getShowTimePreferenceKey(), true) ) {
-			p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-			p.setTextAlign(Paint.Align.LEFT);
-			int location_x = (int) (50 * scale + 0.5f); // convert dps to pixels
-			int location_y = top_y;
-			if( ui_rotation == 90 || ui_rotation == 270 ) {
-				int diff = canvas.getWidth() - canvas.getHeight();
-				location_x += diff/2;
-				location_y -= diff/2;
-			}
-			if( ui_rotation == 90 ) {
-				location_y = canvas.getHeight() - location_y - location_size;
-			}
-			if( ui_rotation == 180 ) {
-				location_x = canvas.getWidth() - location_x;
-				p.setTextAlign(Paint.Align.RIGHT);
-			}
-	        Calendar c = Calendar.getInstance();
-	        // n.b., DateFormat.getTimeInstance() ignores user preferences such as 12/24 hour or date format, but this is an Android bug.
-	        // Whilst DateUtils.formatDateTime doesn't have that problem, it doesn't print out seconds! See:
-	        // http://stackoverflow.com/questions/15981516/simpledateformat-gettimeinstance-ignores-24-hour-format
-	        // http://daniel-codes.blogspot.co.uk/2013/06/how-to-correctly-format-datetime.html
-	        // http://code.google.com/p/android/issues/detail?id=42104
-	        String current_time = DateFormat.getTimeInstance().format(c.getTime());
-	        //String current_time = DateUtils.formatDateTime(getContext(), c.getTimeInMillis(), DateUtils.FORMAT_SHOW_TIME);
-	        applicationInterface.drawTextWithBackground(canvas, p, current_time, Color.WHITE, Color.BLACK, location_x, location_y, true);
-	    }
-
-		if( camera_controller != null && sharedPreferences.getBoolean(PreferenceKeys.getShowFreeMemoryPreferenceKey(), true) ) {
-			p.setTextSize(14 * scale + 0.5f); // convert dps to pixels
-			p.setTextAlign(Paint.Align.LEFT);
-			int location_x = (int) (50 * scale + 0.5f); // convert dps to pixels
-			int location_y = top_y + (int) (16 * scale + 0.5f); // convert dps to pixels
-			if( ui_rotation == 90 || ui_rotation == 270 ) {
-				int diff = canvas.getWidth() - canvas.getHeight();
-				location_x += diff/2;
-				location_y -= diff/2;
-			}
-			if( ui_rotation == 90 ) {
-				location_y = canvas.getHeight() - location_y - location_size;
-			}
-			if( ui_rotation == 180 ) {
-				location_x = canvas.getWidth() - location_x;
-				p.setTextAlign(Paint.Align.RIGHT);
-			}
-			long time_now = System.currentTimeMillis();
-			if( last_free_memory_time == 0 || time_now > last_free_memory_time + 1000 ) {
-				long free_mb = main_activity.freeMemory();
-				if( free_mb >= 0 ) {
-					free_memory_gb = free_mb/1024.0f;
-				}
-				last_free_memory_time = time_now; // always set this, so that in case of free memory not being available, we aren't calling freeMemory() every frame
-			}
-			if( free_memory_gb >= 0.0f ) {
-				applicationInterface.drawTextWithBackground(canvas, p, getContext().getResources().getString(R.string.free_memory) + ": " + decimalFormat.format(free_memory_gb) + "GB", Color.WHITE, Color.BLACK, location_x, location_y, true);
-			}
 		}
 
 		canvas.restore();
@@ -753,10 +475,7 @@ public class DrawPreview {
 			int cy = canvas.getHeight()/2;
 			
 			boolean is_level = false;
-			if( Math.abs(level_angle) <= close_angle ) { // n.b., use level_angle, not angle or orig_level_angle
-				is_level = true;
-			}
-			
+
 			if( is_level ) {
 				radius = (int)(radius * 1.2);
 			}

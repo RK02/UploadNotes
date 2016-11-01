@@ -1,5 +1,6 @@
 package com.campusconnect.previewdemo.Preview;
 
+import com.campusconnect.previewdemo.MainActivity;
 import com.campusconnect.previewdemo.R;
 import com.campusconnect.previewdemo.TakePhoto;
 import com.campusconnect.previewdemo.ToastBoxer;
@@ -34,6 +35,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
+import android.graphics.drawable.TransitionDrawable;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.hardware.camera2.DngCreator;
@@ -56,6 +58,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.View.MeasureSpec;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.TranslateAnimation;
 import android.widget.Toast;
 
 /** This class was originally named due to encapsulating the camera preview,
@@ -68,6 +74,8 @@ import android.widget.Toast;
  */
 public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextureListener {
 	private static final String TAG = "Preview";
+
+	int imageNumber;
 
 	private boolean using_android_l = false;
 	private boolean using_texture_view = false;
@@ -249,7 +257,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
         }
 
 	    gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener());
-	    gestureDetector.setOnDoubleTapListener(new DoubleTapListener());
+//	    gestureDetector.setOnDoubleTapListener(new DoubleTapListener());
 
 		parent.addView(cameraSurface.getView());
 		if( canvasView != null ) {
@@ -394,31 +402,25 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 				this.focus_screen_y = (int)event.getY();
         	}
         }
-        
-		if( applicationInterface.getTouchCapturePref() ) {
-			// interpret as if user had clicked take photo/video button, except that we set the focus/metering areas
-	    	this.takePicturePressed();
-	    	return true;
-		}
 
 		tryAutoFocus(false, true);
 		return true;
 	}
-	
-	public boolean onDoubleTap() {
-		if( applicationInterface.getDoubleTapCapturePref() ) {
-			// interpret as if user had clicked take photo/video button (don't need to set focus/metering, as this was done in touchEvent() for the first touch of the double-tap)
-	    	takePicturePressed();
-		}
-		return true;
-	}
+
+//	public boolean onDoubleTap() {
+//		if( applicationInterface.getDoubleTapCapturePref() ) {
+//			// interpret as if user had clicked take photo/video button (don't need to set focus/metering, as this was done in touchEvent() for the first touch of the double-tap)
+//	    	takePicturePressed();
+//		}
+//		return true;
+//	}
     
-	private class DoubleTapListener extends GestureDetector.SimpleOnGestureListener {
-		@Override
-		public boolean onDoubleTap(MotionEvent e) {
-			return Preview.this.onDoubleTap();
-		}
-    }
+//	private class DoubleTapListener extends GestureDetector.SimpleOnGestureListener {
+//		@Override
+//		public boolean onDoubleTap(MotionEvent e) {
+//			return Preview.this.onDoubleTap();
+//		}
+//    }
     
     public void clearFocusAreas() {
 		if( camera_controller == null ) {
@@ -1609,7 +1611,8 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 
 	/** User has clicked the "take picture" button (or equivalent GUI operation).
 	 */
-	public void takePicturePressed() {
+	public void takePicturePressed(int numberOfImages) {
+		imageNumber=numberOfImages;
 		if( camera_controller == null ) {
 			/*is_taking_photo_on_timer = false;
 			is_taking_photo = false;*/
@@ -1833,12 +1836,12 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     	        	if( !is_preview_started ) {
     	    	    	// we need to restart the preview; and we do this in the callback, as we need to restart after saving the image
     	    	    	// (otherwise this can fail, at least on Nexus 7)
-    		            startCameraPreview();
+								startCameraPreview();
     	        	}
     	        }
     	        else {
     		        phase = PHASE_NORMAL;
-    				boolean pause_preview = applicationInterface.getPausePreviewPref();
+    				boolean pause_preview = true;
     				if( pause_preview && success ) {
     					if( is_preview_started ) {
     						// need to manually stop preview on Android L Camera2
@@ -1851,7 +1854,7 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
     	            	if( !is_preview_started ) {
     		    	    	// we need to restart the preview; and we do this in the callback, as we need to restart after saving the image
     		    	    	// (otherwise this can fail, at least on Nexus 7)
-    			            startCameraPreview();
+									startCameraPreview();
     	            	}
     	        		applicationInterface.cameraInOperation(false);
     				}
@@ -1892,6 +1895,38 @@ public class Preview implements SurfaceHolder.Callback, TextureView.SurfaceTextu
 				}
 				else {
 					success = true;
+					Animation fadeIn = new AlphaAnimation(0, 1);
+					fadeIn.setInterpolator(new DecelerateInterpolator()); //add this
+					fadeIn.setDuration(500);
+					fadeIn.setFillAfter(true);
+
+					TranslateAnimation translateDone = new TranslateAnimation( 100, 0 , 0, 0 );
+					translateDone.setInterpolator(new DecelerateInterpolator()); //add this
+					translateDone.setDuration(500);
+					translateDone.setFillAfter( true );
+
+					MainActivity.transparencyOnCapture.setVisibility(View.VISIBLE);
+					MainActivity.doneSign.setVisibility(View.VISIBLE);
+					MainActivity.transparencyOnCapture.startAnimation(fadeIn);
+					MainActivity.doneSign.startAnimation(translateDone);
+
+					final TransitionDrawable transition = (TransitionDrawable) MainActivity.capturePhoto.getBackground();
+					transition.startTransition(500);
+					Handler revTransition = new Handler();
+					revTransition.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							transition.reverseTransition(500);
+						}
+					}, 500);
+
+					MainActivity.infoContainer.setVisibility(View.VISIBLE);
+					MainActivity.done.setVisibility(View.VISIBLE);
+					if(imageNumber<=1)
+						MainActivity.imageNumber.setText(imageNumber+" page");
+					else
+						MainActivity.imageNumber.setText(imageNumber+" pages");
+
 				}
     	    }
 
