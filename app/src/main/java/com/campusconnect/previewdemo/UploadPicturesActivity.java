@@ -39,6 +39,8 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.campusconnect.previewdemo.UploadManager.NoteDetailsActivity;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
@@ -176,7 +178,9 @@ public class UploadPicturesActivity extends AppCompatActivity {
         next.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent_temp = new Intent(UploadPicturesActivity.this, NotesInfo.class);
+                Intent intent_temp = new Intent(UploadPicturesActivity.this, NoteDetailsActivity.class);
+                intent_temp.putStringArrayListExtra("uriList", getIntent().getStringArrayListExtra("uriList"));
+                intent_temp.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent_temp);
 //                    if (uris.isEmpty()) {
 //                        if(getCallingActivity()!=null)

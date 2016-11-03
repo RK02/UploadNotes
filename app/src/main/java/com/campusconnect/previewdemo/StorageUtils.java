@@ -34,6 +34,8 @@ import android.provider.MediaStore.Video.VideoColumns;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import static com.campusconnect.previewdemo.MainActivity.uriList;
+
 /** Provides access to the filesystem. Supports both standard and Storage
  *  Access Framework.
  */
@@ -100,6 +102,7 @@ public class StorageUtils {
         	MediaScannerConnection.scanFile(context, new String[] { file.getAbsolutePath() }, null,
         			new MediaScannerConnection.OnScanCompletedListener() {
 					public void onScanCompleted(String path, Uri uri) {
+						uriList.add(uri.toString());
     		 			failed_to_scan = false;
     		 			if( set_last_scanned ) {
     		 				last_media_scanned = uri;

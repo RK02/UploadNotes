@@ -5,13 +5,19 @@ import com.campusconnect.previewdemo.CameraController.CameraControllerManager2;
 import com.campusconnect.previewdemo.Preview.Preview;
 import com.campusconnect.previewdemo.UI.FolderChooserDialog;
 import com.campusconnect.previewdemo.UI.MainUI;
+import com.campusconnect.previewdemo.UploadManager.Constants;
+import com.campusconnect.previewdemo.UploadManager.NotificationService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Map;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -50,6 +56,7 @@ import android.content.res.Configuration;
 import android.renderscript.RenderScript;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.GestureDetector;
@@ -116,12 +123,17 @@ public class MainActivity extends AppCompatActivity{
 	public static View transparencyOnCapture;
 	public static ImageView doneSign;
 
+	public static ArrayList<String> uriList;
+	public static NotificationManager notificationManager;
+	public static NotificationCompat.Builder builder;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		long debug_time = 0;
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		uriList = new ArrayList<>();
 		newUser = (TextView)findViewById(R.id.tv_new_user);
 		welcomeBack = (TextView)findViewById(R.id.tv_welcome_back);
 		takePhoto = (TextView)findViewById(R.id.tv_takePhoto);
@@ -173,6 +185,8 @@ public class MainActivity extends AppCompatActivity{
 			@Override
 			public void onClick(View view) {
 				Intent intent_temp = new Intent(MainActivity.this, UploadPicturesActivity.class);
+				intent_temp.putStringArrayListExtra("uriList", uriList);
+				intent_temp.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				startActivity(intent_temp);
 			}
 		});
@@ -274,6 +288,26 @@ public class MainActivity extends AppCompatActivity{
         // load icons
         preloadIcons(R.array.flash_icons);
         preloadIcons(R.array.focus_mode_icons);
+
+		notificationManager =
+				(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		builder = new NotificationCompat.Builder(this);
+		Intent intent = new Intent(this, NotificationService.class);
+		intent.setAction(Constants.ACTION_PAUSE);
+		PendingIntent pauseIntent = PendingIntent.getService(this, 0,
+				intent, 0);
+		Intent intent1 = new Intent(this, NotificationService.class);
+		intent1.setAction(Constants.ACTION_RESUME);
+		PendingIntent resumeIntent = PendingIntent.getService(this, 0,
+				intent1, 0);
+
+		builder.setContentTitle("Notes Uploader")
+				.setContentText("Uploading notes ")
+				.setSmallIcon(R.mipmap.ic_launcher)
+				.setPriority(Notification.PRIORITY_MAX)
+				.setOngoing(true)
+				.addAction(0, "Pause", pauseIntent)
+				.addAction(0, "Resume", resumeIntent);
 	}
 
 	/** Determine whether we support Camera2 API.
