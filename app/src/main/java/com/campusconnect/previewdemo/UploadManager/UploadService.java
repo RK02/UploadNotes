@@ -17,7 +17,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -35,6 +37,8 @@ import okhttp3.ResponseBody;
 
 public class UploadService extends IntentService {
     private static final String TAG = "UploadService";
+    private static final String CREATE_NOTES_API_PATH =
+            "https://uploadingtest-2016.appspot.com/_ah/api/notesapi/v1/createNotes";
     public static Call call;
 
     public UploadService() {
@@ -56,15 +60,13 @@ public class UploadService extends IntentService {
             stopService(new Intent(this, UploadService.class));
             return;
         }
-        Log.d(TAG, "uploading courseId = " + note.getCourseId() + " pages uploaded = " + note.getNoOfPagesUploaded());
+        Log.d(TAG, "uploading courseId = " + note.getCourseId() + " pages uploaded = "
+                + note.getNoOfPagesUploaded());
         OkHttpClient client = new OkHttpClient();
         MultipartBody.Builder body = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
                 .addFormDataPart("courseId", note.getCourseId())
-                .addFormDataPart("profileId", "")
-                .addFormDataPart("date","")
-                .addFormDataPart("title", note.getTitle())
-                .addFormDataPart("notesDesc", note.getNotesDesc());
+                .addFormDataPart("profileId", "");
         File file;
         int pos = note.getNoOfPagesUploaded() + 1;
         ArrayList<String> uriList = note.getUriList();
@@ -75,7 +77,8 @@ public class UploadService extends IntentService {
         }
         Bitmap original = null;
         try {
-            InputStream fileInputStream = getContentResolver().openInputStream(Uri.parse(uriList.get(pos-1)));
+            InputStream fileInputStream = getContentResolver().openInputStream(
+                    Uri.parse(uriList.get(pos-1)));
             original = BitmapFactory.decodeStream(fileInputStream);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -92,7 +95,8 @@ public class UploadService extends IntentService {
             original.compress(Bitmap.CompressFormat.JPEG, 40, out);
         else
             original.compress(Bitmap.CompressFormat.JPEG, 80, out);
-        body.addFormDataPart("file", "test.jpg", RequestBody.create(MediaType.parse("image/*"), file));
+        body.addFormDataPart("file", "test.jpg", RequestBody.create(MediaType.parse("image/*"),
+                file));
 
         RequestBody requestBody = body.build();
         Request request = new Request.Builder()
@@ -139,16 +143,76 @@ public class UploadService extends IntentService {
                 note.setUrls(urls);
                 notesDatabaseHelper.incrementPageNumberOfPendingNote(note.getCourseId());
 
-                Log.d(TAG, "done = " + (note.getNoOfPagesUploaded() + 1) + " total = " + note.getUriList().size());
+                Log.d(TAG, "done = " + (note.getNoOfPagesUploaded() + 1) + " total = "
+                        + note.getUriList().size());
                 if (note.getNoOfPagesUploaded() + 1 == note.getUriList().size()) {
-                    MainActivity.builder.setContentText("Upload complete");
-                    MainActivity.builder.setProgress(0, 0, false);
-                    MainActivity.builder.setOngoing(false);
+                    MainActivity.builder.setContentText("Finishing upload");
+                    MainActivity.builder.setProgress(0, 0, true);
                     MainActivity.notificationManager.notify(1, MainActivity.builder.build());
-                    Log.d(TAG, " Final urls = " + note.getUrls());
-                    int a = notesDatabaseHelper.deletePendingNote(note.getCourseId());
-                    Log.d(TAG, "courseId deleted " + note.getCourseId() + " a = " + a);
-                    stopSelf();
+
+                    Calendar calendar = Calendar.getInstance();
+                    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+                    client = new OkHttpClient();
+
+                    // TODO(anirudhgp): Get course ID and profile ID
+                    body = new MultipartBody.Builder()
+                            .setType(MultipartBody.FORM)
+                            .addFormDataPart("courseId",
+                                    "ahRzfnVwbG9hZGluZ3Rlc3QtMjAxNnITCxIGQ291cnNlGICAgID84o8IDA")
+                            .addFormDataPart("profileId",
+                                    "ahRzfnVwbG9hZGluZ3Rlc3QtMjAxNnIUCxIHUHJvZmlsZRiAgICAr6uNCAw")
+                            .addFormDataPart("date",simpleDateFormat.format(calendar.getTime()))
+                            .addFormDataPart("title", note.getTitle())
+                            .addFormDataPart("urlList", String.valueOf(note.getUrls()))
+                            .addFormDataPart("notesDesc", note.getNotesDesc());
+
+                    requestBody = body.build();
+                    request = new Request.Builder()
+                            .url(CREATE_NOTES_API_PATH)
+                            .post(requestBody)
+                            .addHeader("Content-Type","application/json; charset=UTF-8")
+                            .build();
+                    response = null;
+                    try {
+                        Log.d(TAG, "Calling notesAPI ");
+                        call = client.newCall(request);
+                        response = call.execute();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        res = response;
+                        responseBody = null;
+                        if (res != null) {
+                            responseBody = res.body();
+                        }
+                        jsonresponse = null;
+                        if (responseBody != null) {
+                            jsonresponse = responseBody.string();
+                        } else {
+                            MainActivity.builder.setContentText("Upload paused");
+                            MainActivity.builder.setProgress(0, 0, false);
+                            MainActivity.notificationManager.notify(1, MainActivity.builder.build());
+                            Log.d(TAG, "Upload failed");
+                            stopService(new Intent(this, UploadService.class));
+                            return;
+                        }
+
+                        if (jsonresponse != null) {
+                            Log.d(TAG, "Created note ");
+                            MainActivity.builder.setContentText("Upload complete");
+                            MainActivity.builder.setProgress(0, 0, false);
+                            MainActivity.builder.setOngoing(false);
+                            MainActivity.notificationManager.notify(1, MainActivity.builder.build());
+                            int a = notesDatabaseHelper.deletePendingNote(note.getCourseId());
+                            Log.d(TAG, "courseId deleted " + note.getCourseId() + " a = " + a);
+                            jsonObject = new JSONObject(jsonresponse);
+                            Log.d(TAG, jsonObject.getString("key"));
+                            stopSelf();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }  catch (JSONException e) {
